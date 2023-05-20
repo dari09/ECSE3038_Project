@@ -1,0 +1,5 @@
+venv
+.pio
+.vscode
+env.h
+__pycache__
