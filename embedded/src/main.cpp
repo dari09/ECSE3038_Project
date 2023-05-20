@@ -4,22 +4,22 @@
 #include <ArduinoJson.h>
 #include "env.h"
 
-const char* putendpoint = API_URL_PUT;
-const char* getendpoint = API_URL_GET;
+const char* putEndpoint = API_URL_PUT;
+const char* getEndpoint = API_URL_GET;
 
-const int fanpin = 22;
-const int lightpin = 23;
+const int fanPin = 22;
+const int lightPin = 23;
 
-float float_rand(float min,float max)
+float generateRandomFloat(float min, float max)
 {
-    float scale = rand() / (float) RAND_MAX; /* [0, 1.0] */
-    return min + scale * ( max - min );      /* [min, max] */
+    float scale = rand() / (float) RAND_MAX;
+    return min + scale * (max - min);
 }
 
 void setup() {
   Serial.begin(9600);
-  pinMode(fanpin, OUTPUT);
-  pinMode(lightpin, OUTPUT);
+  pinMode(fanPin, OUTPUT);
+  pinMode(lightPin, OUTPUT);
 
   WiFi.begin(WIFI_USER, WIFI_PASS);
   Serial.println("Connecting");
@@ -27,85 +27,96 @@ void setup() {
     delay(500);
     Serial.print(".");
   }
-  Serial.println("The Bluetooth Device is Ready to Pair");
-  Serial.println("Connected @");
-  Serial.print(WiFi.localIP());
+  Serial.println("Connected to WiFi");
+  Serial.print("Local IP address: ");
+  Serial.println(WiFi.localIP());
 }
 
+void switchLightAndFan(bool lightState, bool fanState)
+{
+  digitalWrite(fanPin, fanState);
+  digitalWrite(lightPin, lightState);
+  
+  Serial.println("Light and Fan Switched Successfully");
+}
+
+void sendPutRequest(float temperature)
+{
+  HTTPClient http;
+  
+  http.begin(putEndpoint);
+  http.addHeader("Content-Type", "application/json");
+
+  StaticJsonDocument<1024> putDoc;
+  putDoc["temperature"] = temperature;
+
+  String httpRequestData;
+  serializeJson(putDoc, httpRequestData);
+
+  int putResponseCode = http.PUT(httpRequestData);
+
+  if (putResponseCode > 0) {
+    Serial.print("PUT Response Code: ");
+    Serial.println(putResponseCode);
+  } else {
+    Serial.print("PUT Request Failed. Error Code: ");
+    Serial.println(putResponseCode);
+  }
+
+  http.end();
+}
+
+void handleGetResponse(String& response)
+{
+  StaticJsonDocument<1024> doc;
+  DeserializationError error = deserializeJson(doc, response);
+
+  if (error) {
+    Serial.print("Failed to parse JSON response. Error: ");
+    Serial.println(error.c_str());
+    return;
+  }
+
+  bool lightState = doc["light"];
+  bool fanState = doc["fan"];
+
+  Serial.println("Light State: " + String(lightState));
+  Serial.println("Fan State: " + String(fanState));
+
+  switchLightAndFan(lightState, fanState);
+}
+
+void sendGetRequest()
+{
+  HTTPClient http;
+
+  http.begin(getEndpoint);
+
+  int getResponseCode = http.GET();
+
+  if (getResponseCode > 0) {
+    Serial.print("GET Response Code: ");
+    Serial.println(getResponseCode);
+
+    String response = http.getString();
+    handleGetResponse(response);
+  } else {
+    Serial.print("GET Request Failed. Error Code: ");
+    Serial.println(getResponseCode);
+  }
+
+  http.end();
+}
 
 void loop() {
-//PUT Request
-  if(WiFi.status()== WL_CONNECTED){   
+  if (WiFi.status() == WL_CONNECTED) {
+    float temperature = generateRandomFloat(21.0, 33.0);
+    sendPutRequest(temperature);
     
-    HTTPClient http;
-    String http_response;
-
-    //PUT REQUEST
-    http.begin(putendpoint);
-    http.addHeader("Content-Type", "application/json");
-
-    StaticJsonDocument<1024> putdoc; // Empty JSONDocument
-    String httpRequestData; // Emtpy string to be used to store HTTP request data string
-
-    putdoc["temperature"]=float_rand(21.0,33.0);
-    serializeJson(putdoc, httpRequestData);
-
-    int PUTResponseCode = http.PUT(httpRequestData);
-
-
-    if (PUTResponseCode>0) {
-        Serial.print("Response:");
-        Serial.print(PUTResponseCode);}
-
-    else {
-        Serial.print("Error: ");
-        Serial.println(PUTResponseCode);}
-      
-      http.end();
-      
-    //GET REQUEST
-    http.begin(getendpoint);
-  
-
-    int httpResponseCode = http.GET();
-
-
-    if (httpResponseCode>0) {
-        Serial.print("Response:");
-        Serial.print(httpResponseCode);
-        http_response = http.getString();
-        Serial.println(http_response);}
-      else {
-        Serial.print("Error: ");
-        Serial.println(httpResponseCode);}
-      http.end();
-
-      
-      StaticJsonDocument<1024> doc;
-      DeserializationError error = deserializeJson(doc, http_response);
-
-      if (error) 
-      { Serial.print("deserializeJson() failed:");
-        Serial.println(error.c_str());
-        return;}
-      
-      bool lightstate = doc["light"];
-      bool fanstate = doc["fan"];
-  
-  
-      Serial.println("Light:");
-      Serial.println(lightstate);
-      Serial.println("Fan:");
-      Serial.println(fanstate);
-
-      digitalWrite(fanpin, fanstate);
-      digitalWrite(lightpin,lightstate);
-      
-      Serial.println("Light and Fan Switched Successfully");
-      
-      delay(1000);   
+    sendGetRequest();
+    
+    delay(1000);
+  } else {
+    Serial.println("Not Connected to WiFi");
   }
-  
-  else {Serial.println("Not Connected");}
-
 }
