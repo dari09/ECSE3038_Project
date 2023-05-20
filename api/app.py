@@ -15,7 +15,7 @@ import re
 # FastAPI (Uvicorn) runs on 8000 by Default
 
 load_dotenv()
-client = motor.motor_asyncio.AsyncIOMotorClient(os.getenv('MONGO_CONNECTION_STRING'))
+client = motor.motor_asyncio.AsyncIOMotorClient(os.getenv('url'))
 db = client.statedb
 db2 = client.settingsdb
 
