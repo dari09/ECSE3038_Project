@@ -2,6 +2,8 @@
 #include <WiFi.h>
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
+#include <OneWire.h>
+#include <DallasTemperature.h>
 #include "env.h"
 
 const char* putEndpoint = API_URL_PUT;

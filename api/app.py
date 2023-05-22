@@ -4,15 +4,15 @@ import motor.motor_asyncio
 from fastapi.middleware.cors import CORSMiddleware
 import pydantic
 import os
-from dotenv import load_dotenv
-from datetime import datetime, timedelta
 import uvicorn
 import json
 import requests
 import pytz
 import re
+from dotenv import load_dotenv
+from datetime import datetime, timedelta
 
-# FastAPI (Uvicorn) runs on 8000 by Default
+
 
 load_dotenv()
 client = motor.motor_asyncio.AsyncIOMotorClient(os.getenv('url'))
