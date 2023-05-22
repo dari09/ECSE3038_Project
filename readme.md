@@ -1,4 +1,5 @@
-Project Description: This code is part of a class project to build an IoT platform that controls simple appliances typically controlled by a switch. The project focuses on controlling lighting appliances (e.g., lamps, in-wall lighting fixtures) and cooling/heating appliances (e.g., fans, air conditioning units).
+##Project Description
+This code is part of a class project to build an IoT platform that controls simple appliances typically controlled by a switch. The project focuses on controlling lighting appliances (e.g., lamps, in-wall lighting fixtures) and cooling/heating appliances (e.g., fans, air conditioning units).
 
 The code performs the following tasks:
 
